@@ -61,7 +61,7 @@ func GetProperty(original_data map[string]interface{}, path, separator string) (
 				index_found = strings.Trim(index_found, "[]")
 				if index, err := strconv.Atoi(index_found); err == nil {
 					if v, ok := data[property]; ok {
-						if IsKind(v, reflect.Slice) {
+						if isKind(v, reflect.Slice) {
 							slice := reflect.ValueOf(v)
 							if index >= 0 && index < slice.Len() {
 								value := slice.Index(index).Interface()
@@ -185,13 +185,13 @@ func DeleteProperty(original_data map[string]interface{}, path, separator string
 				index_found = strings.Trim(index_found, "[]")
 				if index, err := strconv.Atoi(index_found); err == nil {
 					if v, ok := original_data[property]; ok {
-						if IsKind(v, reflect.Slice) {
+						if isKind(v, reflect.Slice) {
 							slice := reflect.ValueOf(v)
 							if index >= 0 && index < slice.Len() {
 								value := slice.Index(index).Interface()
 								// If len of other levels greater than 0
 								if len(levels[1:]) >= 1 {
-									if IsKind(value, reflect.Map) {
+									if isKind(value, reflect.Map) {
 										mapped_value := value.(map[string]interface{})
 										err = DeleteProperty(mapped_value, strings.Join(levels[1:], separator), separator)
 										if err == nil {
@@ -336,7 +336,7 @@ func AddProperty(original_data map[string]interface{}, path, separator string, v
 				index_found = strings.Trim(index_found, "[]")
 				if index, err := strconv.Atoi(index_found); err == nil {
 					if v, ok := original_data[property]; ok {
-						if IsKind(v, reflect.Slice) {
+						if isKind(v, reflect.Slice) {
 							slice := reflect.ValueOf(v)
 							var dest_value interface{}
 							if index >= 0 && index < slice.Len() {
@@ -344,7 +344,7 @@ func AddProperty(original_data map[string]interface{}, path, separator string, v
 							}
 							// If len of other levels greater than 0
 							if len(levels[1:]) >= 1 {
-								if IsKind(dest_value, reflect.Map) {
+								if isKind(dest_value, reflect.Map) {
 									mapped_value := dest_value.(map[string]interface{})
 									err = AddProperty(mapped_value, strings.Join(levels[1:], separator), separator, value)
 									return err
@@ -463,7 +463,7 @@ func UpdateProperty(original_data map[string]interface{}, path, separator string
 					index_found = strings.Trim(index_found, "[]")
 					if index, err := strconv.Atoi(index_found); err == nil {
 						if v, ok := original_data[property]; ok {
-							if IsKind(v, reflect.Slice) {
+							if isKind(v, reflect.Slice) {
 								slice := reflect.ValueOf(v)
 								var dest_value interface{}
 								if index >= 0 && index < slice.Len() {
@@ -471,7 +471,7 @@ func UpdateProperty(original_data map[string]interface{}, path, separator string
 								}
 								// If len of other levels greater than 0
 								if len(levels[1:]) >= 1 {
-									if IsKind(dest_value, reflect.Map) {
+									if isKind(dest_value, reflect.Map) {
 										mapped_value := dest_value.(map[string]interface{})
 										err = UpdateProperty(mapped_value, strings.Join(levels[1:], separator), separator, value)
 										return err
