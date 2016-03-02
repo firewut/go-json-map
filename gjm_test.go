@@ -177,7 +177,7 @@ func TestUpdateProperty(t *testing.T) {
 	for i, c := range cases {
 		case_index := i + 1
 
-		err_case := UpdateProperty(c.in, c.path, c.separator, c.value)
+		err_case := UpdateProperty(c.in, c.path, c.value, c.separator)
 		out := c.in
 		if !reflect.DeepEqual(c.err, err_case) {
 			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
@@ -307,7 +307,7 @@ func TestAddProperty(t *testing.T) {
 			in:        setupDocument(),
 			path:      "one.two.three",
 			value:     "added value",
-			separator: ".",
+			separator: "",
 			out:       setupDocument(),
 			err:       fmt.Errorf("Property one.two.three already exists"),
 		},
@@ -325,7 +325,7 @@ func TestAddProperty(t *testing.T) {
 	for i, c := range cases {
 		case_index := i + 1
 
-		err_case := AddProperty(c.in, c.path, c.separator, c.value)
+		err_case := AddProperty(c.in, c.path, c.value, c.separator)
 		out := c.in
 		if !reflect.DeepEqual(c.err, err_case) {
 			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
@@ -521,7 +521,7 @@ func TestDeleteProperty(t *testing.T) {
 		{
 			in:        setupDocument_II(),
 			path:      "one[3].three[1].seven.eight",
-			separator: ".",
+			separator: "",
 			out: map[string]interface{}{
 				"one": []map[string]interface{}{
 					{
@@ -674,7 +674,7 @@ func TestGetProperty(t *testing.T) {
 		{
 			in:        setupDocument_II(),
 			path:      "one[2].two[1].eight",
-			separator: ".",
+			separator: "",
 			out:       setupDocument_II()["one"].([]map[string]interface{})[2]["two"].([]map[string]interface{})[1]["eight"],
 			err:       nil,
 		},
