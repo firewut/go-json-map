@@ -1,4 +1,7 @@
 [![Build Status](https://travis-ci.org/firewut/go-json-map.svg)](https://travis-ci.org/firewut/go-json-map)
+[![Godoc](http://img.shields.io/badge/godoc-reference-blue.svg?style=flat)](https://godoc.org/github.com/firewut/go-json-map) 
+[![license](http://img.shields.io/badge/license-MIT-red.svg?style=flat)](https://raw.githubusercontent.com/firewut/go-json-map/master/LICENSE)
+
 
 # Go json map
 
