@@ -171,6 +171,176 @@ func TestUpdateProperty(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			in:        setupDocument(),
+			path:      "lala.two.three.four.five.six.seven[5].eight.nine",
+			value:     "test",
+			separator: ".",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"lala": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": map[string]interface{}{
+							"four": map[string]interface{}{
+								"five": map[string]interface{}{
+									"six": map[string]interface{}{
+										"seven": []interface{}{
+											nil,
+											nil,
+											nil,
+											nil,
+											nil,
+											map[string]interface{}{
+												"eight": map[string]interface{}{
+													"nine": "test",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "property.which.does.not.exist",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"property": map[string]interface{}{
+					"which": map[string]interface{}{
+						"does": map[string]interface{}{
+							"not": map[string]interface{}{
+								"exist": "test",
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "property.which.does.not.exist[2]",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"property": map[string]interface{}{
+					"which": map[string]interface{}{
+						"does": map[string]interface{}{
+							"not": map[string]interface{}{
+								"exist": []interface{}{
+									nil,
+									nil,
+									"test",
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "property.which.does.not.exist[0]",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"property": map[string]interface{}{
+					"which": map[string]interface{}{
+						"does": map[string]interface{}{
+							"not": map[string]interface{}{
+								"exist": []interface{}{
+									"test",
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "exists[5]",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"exists": []interface{}{
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					"test",
+				},
+			},
+			err: nil,
+		},
 	}
 
 	num_cases := len(cases)
@@ -318,6 +488,176 @@ func TestAddProperty(t *testing.T) {
 			separator: ".",
 			out:       setupDocument(),
 			err:       fmt.Errorf("Property one.two.three[1] already exists"),
+		},
+		{
+			in:        setupDocument(),
+			path:      "lala.two.three.four.five.six.seven[5].eight.nine",
+			value:     "test",
+			separator: ".",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"lala": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": map[string]interface{}{
+							"four": map[string]interface{}{
+								"five": map[string]interface{}{
+									"six": map[string]interface{}{
+										"seven": []interface{}{
+											nil,
+											nil,
+											nil,
+											nil,
+											nil,
+											map[string]interface{}{
+												"eight": map[string]interface{}{
+													"nine": "test",
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "property.which.does.not.exist",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"property": map[string]interface{}{
+					"which": map[string]interface{}{
+						"does": map[string]interface{}{
+							"not": map[string]interface{}{
+								"exist": "test",
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "property.which.does.not.exist[2]",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"property": map[string]interface{}{
+					"which": map[string]interface{}{
+						"does": map[string]interface{}{
+							"not": map[string]interface{}{
+								"exist": []interface{}{
+									nil,
+									nil,
+									"test",
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "property.which.does.not.exist[0]",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"property": map[string]interface{}{
+					"which": map[string]interface{}{
+						"does": map[string]interface{}{
+							"not": map[string]interface{}{
+								"exist": []interface{}{
+									"test",
+								},
+							},
+						},
+					},
+				},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "exists[5]",
+			value:     "test",
+			separator: "",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{
+							1, 2, 3,
+						},
+					},
+					"four": map[string]interface{}{
+						"five": []int{
+							11, 22, 33,
+						},
+					},
+				},
+				"exists": []interface{}{
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					"test",
+				},
+			},
+			err: nil,
 		},
 	}
 

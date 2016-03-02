@@ -361,8 +361,13 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 							if len(levels[1:]) >= 1 {
 								if isKind(dest_value, reflect.Map) {
 									mapped_value := dest_value.(map[string]interface{})
-									err = AddProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
-									return err
+									return AddProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
+								} else if dest_value == nil {
+									mapped_value := make(map[string]interface{})
+									mapped_value[levels[1]] = make(map[string]interface{})
+
+									original_data[path_level_one] = mapped_value
+									return AddProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
 								}
 							} else {
 								// if this is a `property[1]` in a path like `path.to.property[1]`
@@ -383,9 +388,13 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 							)
 						}
 					} else {
-						err = fmt.Errorf(
-							"Property %s does not exist", property,
-						)
+						new_sliced_value := make([]interface{}, index+1)
+						new_mapped_value := make(map[string]interface{})
+						new_sliced_value[index] = new_mapped_value
+						original_data[path_level_one] = new_sliced_value
+
+						err = UpdateProperty(original_data, path, value, separator)
+						return err
 					}
 				} else {
 					err = fmt.Errorf(
@@ -418,10 +427,12 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 
 				}
 			} else {
-				err = fmt.Errorf(
-					"Property %s does not exist", path_level_one,
-				)
-				return
+				new_mapped_value := make(map[string]interface{})
+				original_data[path_level_one] = new_mapped_value
+				err = AddProperty(new_mapped_value, strings.Join(levels[1:], separator), value, separator)
+				if err != nil {
+					return
+				}
 			}
 		} else {
 			// If a map does not contain a last node property
@@ -497,17 +508,16 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 								if len(levels[1:]) >= 1 {
 									if isKind(dest_value, reflect.Map) {
 										mapped_value := dest_value.(map[string]interface{})
-										err = UpdateProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
-										return err
+										return UpdateProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
 									}
 								} else {
 									// if this is a `property[1]` in a path like `path.to.property[1]`
-									slices := make([]interface{}, 0)
+									slices := make([]interface{}, slice.Len())
 									for i := 0; i < slice.Len(); i++ {
 										if i != index {
-											slices = append(slices, slice.Index(i).Interface())
+											slices[i] = slice.Index(i).Interface()
 										} else {
-											slices = append(slices, value)
+											slices[index] = value
 										}
 									}
 									if index >= slice.Len() {
