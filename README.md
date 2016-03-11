@@ -29,7 +29,7 @@ document := map[string]interface{}{
 Get a property
 
 ```go
-property, err := GetProperty(document, "one.two.three[0]", ".")
+property, err := GetProperty(document, "one.two.three[0]")
 fmt.Println(property)
 // property => 1
 
@@ -41,14 +41,14 @@ fmt.Println(property)
 Create
 
 ```go
-err := CreateProperty(document, "one.three", ".", "third value")
+err := CreateProperty(document, "one.three", "third value")
 ```
 
 Update
 
 ```go
-err := UpdateProperty(document, "one.two.three[0]", ".", "updated value")
-err := UpdateProperty(document, "one.two.three[4]", ".", "created value")
+err := UpdateProperty(document, "one.two.three[0]", "updated value")
+err := UpdateProperty(document, "one/two/three[4]", []int{1,2,3,4], "/")
 ```
 
 Delete
