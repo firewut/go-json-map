@@ -350,6 +350,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 				}
 				index_found = strings.Trim(index_found, "[]")
 				if index, err := strconv.Atoi(index_found); err == nil {
+
 					if v, ok := original_data[property]; ok {
 						if isKind(v, reflect.Slice) {
 							slice := reflect.ValueOf(v)
@@ -371,13 +372,19 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 								}
 							} else {
 								// if this is a `property[1]` in a path like `path.to.property[1]`
-								slices := make([]interface{}, 0)
+								slice_len := slice.Len()
+								if index > slice_len-1 {
+									slice_len = index + 1
+								}
+
+								slices := make([]interface{}, slice_len)
+
 								for i := 0; i < slice.Len(); i++ {
-									slices = append(slices, slice.Index(i).Interface())
+									if i < slice.Len() {
+										slices[i] = slice.Index(i).Interface()
+									}
 								}
-								if index >= slice.Len() {
-									slices = append(slices, value)
-								}
+								slices[index] = value
 
 								original_data[path_level_one] = slices
 								return err
@@ -394,6 +401,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 						original_data[path_level_one] = new_sliced_value
 
 						err = UpdateProperty(original_data, path, value, separator)
+
 						return err
 					}
 				} else {
@@ -459,7 +467,6 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 			separator = separator_arr[0]
 		}
 	}
-
 	// If we have a property - update it, otherwise add it
 	if _, err = GetProperty(original_data, path, separator); err != nil {
 		err = AddProperty(original_data, path, value, separator)
@@ -491,12 +498,13 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 				index_found := index_re.FindString(path_level_one)
 
 				// If index > 0 - check if this property is array
-				if len(index_found) > 0 {
+				if len(index_found) >= 0 {
 					if len(property) > 0 {
 						path_level_one = property
 					}
 					index_found = strings.Trim(index_found, "[]")
 					if index, err := strconv.Atoi(index_found); err == nil {
+
 						if v, ok := original_data[property]; ok {
 							if isKind(v, reflect.Slice) {
 								slice := reflect.ValueOf(v)

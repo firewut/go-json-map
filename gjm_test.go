@@ -358,6 +358,24 @@ func TestUpdateProperty(t *testing.T) {
 	}
 }
 
+func TestUpdatePropertyDetailed(t *testing.T) {
+	in := make(map[string]interface{})
+	path_0 := "a.b[0]"
+	path_2 := "a.b[2]"
+	path_4 := "a.b[4]"
+
+	UpdateProperty(in, path_0, 0)
+	UpdateProperty(in, path_2, 2)
+	UpdateProperty(in, path_4, 4)
+
+	a := in["a"].(map[string]interface{})
+	b := a["b"].([]interface{})
+
+	if !reflect.DeepEqual(b, []interface{}{0, nil, 2, nil, 4}) {
+		t.Error("Should be [0, nil, 2, nil, 4]")
+	}
+}
+
 func TestAddProperty(t *testing.T) {
 	cases := []MapTest{
 		{
