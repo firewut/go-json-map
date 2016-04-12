@@ -391,10 +391,12 @@ func TestUpdatePropertyArrayOfObjects(t *testing.T) {
 	path_0 := "a[0].b"
 	path_2 := "a[1].c"
 	path_4 := "a[2].x[3]"
+	path_5 := "b"
 
 	UpdateProperty(in, path_2, "lc")
 	UpdateProperty(in, path_0, "la")
 	UpdateProperty(in, path_4, "lx")
+	UpdateProperty(in, path_5, "x")
 
 	if !reflect.DeepEqual(in["a"], []interface{}{
 		map[string]interface{}{"b": "la"},
@@ -402,6 +404,9 @@ func TestUpdatePropertyArrayOfObjects(t *testing.T) {
 		map[string]interface{}{"x": []interface{}{nil, nil, nil, "lx"}},
 	}) {
 		t.Error("Should be [{b:\"la\"}, {c:\"lc\"}, {x:[nil,nil,nil,\"lx\"]}]. Got ", in["a"])
+	}
+	if !reflect.DeepEqual(in["b"], "x") {
+		t.Error("Should be \"x\". Got ", in["b"])
 	}
 }
 
