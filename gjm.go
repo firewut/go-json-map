@@ -74,7 +74,7 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 								data[property] = value
 							} else {
 								err = fmt.Errorf(
-									"%s: Min index is 0, Max index is %d", property, slice.Len(),
+									"%s: Min index is 0, Max index is %d. You passed index %d", property, slice.Len(), index,
 								)
 								return path_parsed, err
 							}
@@ -329,7 +329,6 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 
 	if len(levels) > 0 && path != separator {
 		path_level_one := levels[0]
-
 		// If we have a level in path_level_one
 
 		re := regexp.MustCompile(`\w+\[\d+\]{1}`)
@@ -350,25 +349,47 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 				}
 				index_found = strings.Trim(index_found, "[]")
 				if index, err := strconv.Atoi(index_found); err == nil {
-
 					if v, ok := original_data[property]; ok {
 						if isKind(v, reflect.Slice) {
 							slice := reflect.ValueOf(v)
 							var dest_value interface{}
-							if index >= 0 && index < slice.Len() {
+
+							if index < slice.Len() {
 								dest_value = slice.Index(index).Interface()
 							}
+
 							// If len of other levels greater than 0
 							if len(levels[1:]) >= 1 {
 								if isKind(dest_value, reflect.Map) {
 									mapped_value := dest_value.(map[string]interface{})
 									return AddProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
 								} else if dest_value == nil {
-									mapped_value := make(map[string]interface{})
-									mapped_value[levels[1]] = make(map[string]interface{})
+									slice_len := slice.Len()
+									if index > slice_len-1 {
+										slice_len = index + 1
+									}
+									vv := make([]interface{}, slice_len)
 
-									original_data[path_level_one] = mapped_value
-									return AddProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
+									for i, _ := range vv {
+										var val interface{}
+										if i < slice.Len() {
+											val = slice.Index(i).Interface()
+										}
+										vv[i] = val
+									}
+
+									mapped_value := make(map[string]interface{})
+
+									err = AddProperty(
+										mapped_value,
+										strings.Join(levels[1:], separator),
+										value,
+										separator,
+									)
+									vv[index] = mapped_value
+									original_data[property] = vv
+
+									return err
 								}
 							} else {
 								// if this is a `property[1]` in a path like `path.to.property[1]`
@@ -376,7 +397,6 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 								if index > slice_len-1 {
 									slice_len = index + 1
 								}
-
 								slices := make([]interface{}, slice_len)
 
 								for i := 0; i < slice.Len(); i++ {
@@ -399,10 +419,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 						new_mapped_value := make(map[string]interface{})
 						new_sliced_value[index] = new_mapped_value
 						original_data[path_level_one] = new_sliced_value
-
-						err = UpdateProperty(original_data, path, value, separator)
-
-						return err
+						return UpdateProperty(original_data, path, value, separator)
 					}
 				} else {
 					err = fmt.Errorf(
@@ -424,10 +441,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 					switch reflect.TypeOf(level_one_value).Kind() {
 					case reflect.Map:
 						if mapped_level_one_value, ok := level_one_value.(map[string]interface{}); ok {
-							err = AddProperty(mapped_level_one_value, strings.Join(levels[1:], separator), value, separator)
-							if err != nil {
-								return
-							}
+							return AddProperty(mapped_level_one_value, strings.Join(levels[1:], separator), value, separator)
 						}
 					default:
 						original_data[path] = value
@@ -437,10 +451,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 			} else {
 				new_mapped_value := make(map[string]interface{})
 				original_data[path_level_one] = new_mapped_value
-				err = AddProperty(new_mapped_value, strings.Join(levels[1:], separator), value, separator)
-				if err != nil {
-					return
-				}
+				return AddProperty(new_mapped_value, strings.Join(levels[1:], separator), value, separator)
 			}
 		} else {
 			// If a map does not contain a last node property
@@ -467,9 +478,10 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 			separator = separator_arr[0]
 		}
 	}
+
 	// If we have a property - update it, otherwise add it
 	if _, err = GetProperty(original_data, path, separator); err != nil {
-		err = AddProperty(original_data, path, value, separator)
+		return AddProperty(original_data, path, value, separator)
 	} else {
 		if len(path) == 0 {
 			path = separator
@@ -487,7 +499,6 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 			path_level_one := levels[0]
 
 			// If we have a level in path_level_one
-
 			re := regexp.MustCompile(`\w+\[\d+\]{1}`)
 			if matched := re.FindString(path_level_one); len(matched) > 0 {
 				property_re := regexp.MustCompile(`\w+`)
@@ -504,7 +515,6 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 					}
 					index_found = strings.Trim(index_found, "[]")
 					if index, err := strconv.Atoi(index_found); err == nil {
-
 						if v, ok := original_data[property]; ok {
 							if isKind(v, reflect.Slice) {
 								slice := reflect.ValueOf(v)
@@ -561,10 +571,7 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 						switch reflect.TypeOf(level_one_value).Kind() {
 						case reflect.Map:
 							if mapped_level_one_value, ok := level_one_value.(map[string]interface{}); ok {
-								err = UpdateProperty(mapped_level_one_value, strings.Join(levels[1:], separator), value, separator)
-								if err != nil {
-									return
-								}
+								return UpdateProperty(mapped_level_one_value, strings.Join(levels[1:], separator), value, separator)
 							}
 						default:
 							original_data[path] = value

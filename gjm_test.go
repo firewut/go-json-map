@@ -29,6 +29,16 @@ func TestUpdateProperty(t *testing.T) {
 		},
 		{
 			in:        setupDocument(),
+			path:      "one",
+			value:     nil,
+			separator: ".",
+			out: map[string]interface{}{
+				"one": nil,
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
 			path:      "one.three",
 			value:     "updated value",
 			separator: ".",
@@ -373,6 +383,44 @@ func TestUpdatePropertyDetailed(t *testing.T) {
 
 	if !reflect.DeepEqual(b, []interface{}{0, nil, 2, nil, 4}) {
 		t.Error("Should be [0, nil, 2, nil, 4]")
+	}
+}
+
+func TestUpdatePropertyArrayOfObjects(t *testing.T) {
+	in := make(map[string]interface{})
+	path_0 := "a[0].b"
+	path_2 := "a[1].c"
+	path_4 := "a[2].x[3]"
+
+	UpdateProperty(in, path_2, "lc")
+	UpdateProperty(in, path_0, "la")
+	UpdateProperty(in, path_4, "lx")
+
+	if !reflect.DeepEqual(in["a"], []interface{}{
+		map[string]interface{}{"b": "la"},
+		map[string]interface{}{"c": "lc"},
+		map[string]interface{}{"x": []interface{}{nil, nil, nil, "lx"}},
+	}) {
+		t.Error("Should be [{b:\"la\"}, {c:\"lc\"}, {x:[nil,nil,nil,\"lx\"]}]. Got ", in["a"])
+	}
+}
+
+func TestUpdatePropertyArrayOfObjectsObjects(t *testing.T) {
+	in := make(map[string]interface{})
+	path_0 := "a[0].b.bb[1]"
+	path_2 := "a[1].c.cc[2]"
+	path_4 := "a[2].x[3].z"
+
+	UpdateProperty(in, path_2, "lc")
+	UpdateProperty(in, path_0, "la")
+	UpdateProperty(in, path_4, "lx")
+
+	if !reflect.DeepEqual(in["a"], []interface{}{
+		map[string]interface{}{"b": map[string]interface{}{"bb": []interface{}{nil, "la"}}},
+		map[string]interface{}{"c": map[string]interface{}{"cc": []interface{}{nil, nil, "lc"}}},
+		map[string]interface{}{"x": []interface{}{nil, nil, nil, map[string]interface{}{"z": "lx"}}},
+	}) {
+		t.Error("Should be [{b:\"la\"}, {c:\"lc\"}, {x:[nil,nil,nil,\"lx\"]}]. Got ", in["a"])
 	}
 }
 
