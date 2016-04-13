@@ -386,6 +386,57 @@ func TestUpdatePropertyDetailed(t *testing.T) {
 	}
 }
 
+func TestUpdatePropertyOverrides(t *testing.T) {
+	in := map[string]interface{}{
+		"a": map[string]interface{}{
+			"b": 1,
+		},
+	}
+	UpdateProperty(in, "a.c", 2)
+	if !reflect.DeepEqual(in["a"], map[string]interface{}{
+		"b": 1,
+		"c": 2,
+	}) {
+		t.Error("Should be {\"b\":1, \"c\":2}. Got ", in["a"])
+	}
+
+	in_slice := map[string]interface{}{
+		"a": []interface{}{
+			map[string]interface{}{
+				"b": 1,
+			},
+		},
+	}
+	UpdateProperty(in_slice, "a[1].c", 2)
+	if !reflect.DeepEqual(in_slice["a"], []interface{}{
+		map[string]interface{}{
+			"b": 1,
+		},
+		map[string]interface{}{
+			"c": 2,
+		},
+	}) {
+		t.Error("Should be [{\"b\":1}, {\"c\":2}]. Got ", in_slice["a"])
+	}
+
+	in_slice_II := map[string]interface{}{
+		"a": []interface{}{
+			map[string]interface{}{
+				"b": 1,
+			},
+		},
+	}
+	UpdateProperty(in_slice_II, "a[0].c", 2)
+	if !reflect.DeepEqual(in_slice_II["a"], []interface{}{
+		map[string]interface{}{
+			"b": 1,
+			"c": 2,
+		},
+	}) {
+		t.Error("Should be [{\"b\":1, \"c\":2}]. Got ", in_slice_II["a"])
+	}
+}
+
 func TestUpdatePropertyArrayOfObjects(t *testing.T) {
 	in := make(map[string]interface{})
 	path_0 := "a[0].b"
