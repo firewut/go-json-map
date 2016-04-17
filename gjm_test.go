@@ -1142,6 +1142,13 @@ func TestGetProperty(t *testing.T) {
 		},
 		{
 			in:        setupDocument_II(),
+			path:      "one[2].two[1].eight.ten",
+			separator: "",
+			out:       nil,
+			err:       fmt.Errorf("Property %s does not exist", "eight.ten"),
+		},
+		{
+			in:        setupDocument_II(),
 			path:      "one[1].two[1].eight",
 			separator: ".",
 			out:       nil,

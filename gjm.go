@@ -107,18 +107,10 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 					switch reflect.TypeOf(level_one_value).Kind() {
 					case reflect.Map:
 						if mapped_level_one_value, ok := level_one_value.(map[string]interface{}); ok {
-							if path_parsed_local, err_local := GetProperty(mapped_level_one_value, strings.Join(levels[1:], separator), separator); err_local != nil {
-								return path_parsed, err_local
-							} else {
-								path_parsed = path_parsed_local
-								err = nil
-							}
+							return GetProperty(mapped_level_one_value, strings.Join(levels[1:], separator), separator)
 						}
 					default:
-						path_parsed = map[string]interface{}{
-							path_level_one: level_one_value,
-						}
-						err = nil
+						// pass
 					}
 				}
 			} else {
