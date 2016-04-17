@@ -400,6 +400,19 @@ func TestUpdatePropertyOverrides(t *testing.T) {
 		t.Error("Should be {\"b\":1, \"c\":2}. Got ", in["a"])
 	}
 
+	in_rewrite := map[string]interface{}{
+		"a": map[string]interface{}{
+			"b": 3,
+			"c": 4,
+		},
+	}
+	UpdateProperty(in_rewrite, "a", map[string]interface{}{"d": 5})
+	if !reflect.DeepEqual(in_rewrite["a"], map[string]interface{}{
+		"d": 5,
+	}) {
+		t.Error("Should be {\"d\":5}. Got ", in_rewrite["a"])
+	}
+
 	in_slice := map[string]interface{}{
 		"a": []interface{}{
 			map[string]interface{}{
