@@ -23,11 +23,12 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 		}
 	}
 
-	// Protect the original map :D
 	data := make(map[string]interface{})
-	for k, v := range original_data {
-		data[k] = v
+	d := reflect.ValueOf(original_data)
+	for _, key := range d.MapKeys() {
+		data[key.String()] = d.MapIndex(key).Interface()
 	}
+
 	err = fmt.Errorf("Property %s does not exist", path)
 
 	if len(path) == 0 {
@@ -44,12 +45,11 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 
 	if len(levels) > 0 && path != separator {
 		path_level_one := levels[0]
-
 		// If we have a level in path_level_one
 
-		re := regexp.MustCompile(`\w+\[\d+\]{1}`)
+		re := regexp.MustCompile(`(\w+[\_]?[\-]?)+\[\d+\]{1}`)
 		if matched := re.FindString(path_level_one); len(matched) > 0 {
-			property_re := regexp.MustCompile(`\w+`)
+			property_re := regexp.MustCompile(`(\w+[\_]?[\-]?)+`)
 			index_re := regexp.MustCompile(`\[\d+\]{1}`)
 			// Get a property
 			// avatars
@@ -106,9 +106,12 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 				if level_one_value != nil {
 					switch reflect.TypeOf(level_one_value).Kind() {
 					case reflect.Map:
-						if mapped_level_one_value, ok := level_one_value.(map[string]interface{}); ok {
-							return GetProperty(mapped_level_one_value, strings.Join(levels[1:], separator), separator)
+						mapped_level_one_value := make(map[string]interface{})
+						d := reflect.ValueOf(level_one_value)
+						for _, key := range d.MapKeys() {
+							mapped_level_one_value[key.String()] = d.MapIndex(key).Interface()
 						}
+						return GetProperty(mapped_level_one_value, strings.Join(levels[1:], separator), separator)
 					default:
 						// pass
 					}
@@ -168,9 +171,9 @@ func DeleteProperty(original_data map[string]interface{}, path string, separator
 
 		// If we have a level in path_level_one
 
-		re := regexp.MustCompile(`\w+\[\d+\]{1}`)
+		re := regexp.MustCompile(`(\w+[\_]?[\-]?)+\[\d+\]{1}`)
 		if matched := re.FindString(path_level_one); len(matched) > 0 {
-			property_re := regexp.MustCompile(`\w+`)
+			property_re := regexp.MustCompile(`(\w+[\_]?[\-]?)+`)
 			index_re := regexp.MustCompile(`\[\d+\]{1}`)
 			// Get a property
 			// avatars
@@ -323,9 +326,9 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 		path_level_one := levels[0]
 		// If we have a level in path_level_one
 
-		re := regexp.MustCompile(`\w+\[\d+\]{1}`)
+		re := regexp.MustCompile(`(\w+[\_]?[\-]?)+\[\d+\]{1}`)
 		if matched := re.FindString(path_level_one); len(matched) > 0 {
-			property_re := regexp.MustCompile(`\w+`)
+			property_re := regexp.MustCompile(`(\w+[\_]?[\-]?)+`)
 			index_re := regexp.MustCompile(`\[\d+\]{1}`)
 			// Get a property
 			// avatars
@@ -491,9 +494,9 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 			path_level_one := levels[0]
 
 			// If we have a level in path_level_one
-			re := regexp.MustCompile(`\w+\[\d+\]{1}`)
+			re := regexp.MustCompile(`(\w+[\_]?[\-]?)+\[\d+\]{1}`)
 			if matched := re.FindString(path_level_one); len(matched) > 0 {
-				property_re := regexp.MustCompile(`\w+`)
+				property_re := regexp.MustCompile(`(\w+[\_]?[\-]?)+`)
 				index_re := regexp.MustCompile(`\[\d+\]{1}`)
 				property := property_re.FindString(path_level_one)
 

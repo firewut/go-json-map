@@ -1049,6 +1049,34 @@ func TestDeleteProperty(t *testing.T) {
 func TestGetProperty(t *testing.T) {
 	cases := []MapTest{
 		{
+			in:        setupDocument_III(),
+			path:      "request.method",
+			separator: ".",
+			out:       "GET",
+			err:       nil,
+		},
+		{
+			in:        setupDocument_III(),
+			path:      "request.status_code",
+			separator: ".",
+			out:       200,
+			err:       nil,
+		},
+		{
+			in:        setupDocument_III(),
+			path:      "request.headers.authorization",
+			separator: ".",
+			out:       []string{"Token 1234"},
+			err:       nil,
+		},
+		{
+			in:        setupDocument_III(),
+			path:      "request.headers.Content-Type",
+			separator: ".",
+			out:       []string{"application/json"},
+			err:       nil,
+		},
+		{
 			in:        setupDocument(),
 			path:      ".",
 			separator: ".",
@@ -1251,6 +1279,24 @@ func setupDocument_II() (document_II map[string]interface{}) {
 					}},
 				},
 			},
+		},
+	}
+	return
+}
+
+func setupDocument_III() (document_III map[string]interface{}) {
+	document_III = map[string]interface{}{
+		"request": map[string]interface{}{
+			"headers": map[string][]string{
+				"Content-Type": []string{
+					"application/json",
+				},
+				"authorization": []string{
+					"Token 1234",
+				},
+			},
+			"status_code": 200,
+			"method":      "GET",
 		},
 	}
 	return
