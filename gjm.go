@@ -93,7 +93,7 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 				} else {
 					err = fmt.Errorf(
 						"%s must be of type %s",
-						fmt.Sprintf("%s[%d]", property, index_found),
+						fmt.Sprintf("%s[%s]", property, index_found),
 						"number",
 					)
 					return path_parsed, err
@@ -242,7 +242,7 @@ func DeleteProperty(original_data map[string]interface{}, path string, separator
 				} else {
 					err = fmt.Errorf(
 						"%s must be of type %s",
-						fmt.Sprintf("%s[%d]", property, index_found),
+						fmt.Sprintf("%s[%s]", property, index_found),
 						"number",
 					)
 				}
@@ -419,7 +419,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 				} else {
 					err = fmt.Errorf(
 						"%s must be of type %s",
-						fmt.Sprintf("%s[%d]", property, index_found),
+						fmt.Sprintf("%s[%s]", property, index_found),
 						"number",
 					)
 				}
@@ -554,7 +554,7 @@ func UpdateProperty(original_data map[string]interface{}, path string, value int
 				} else {
 					err = fmt.Errorf(
 						"%s must be of type %s",
-						fmt.Sprintf("%s[%d]", property, index_found),
+						fmt.Sprintf("%s[%s]", property, index_found),
 						"number",
 					)
 				}
