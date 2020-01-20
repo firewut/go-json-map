@@ -139,7 +139,7 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 //
 //    err := DeleteProperty(document, "one.two.three[0]")
 //    err := DeleteProperty(document, "one.two.three[0]", ".")
-//    err := DeletePropertyx(document, "one/two/three[0]", "/")
+//    err := DeleteProperty(document, "one/two/three[0]", "/")
 //
 func DeleteProperty(original_data map[string]interface{}, path string, separator_arr ...string) (err error) {
 	var separator = "."
