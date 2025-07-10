@@ -10,9 +10,9 @@ import (
 
 // GetProperty returns a property if it exist.
 //
-//    property, err := GetProperty(document, "one.two.three[0]")
-//    property, err := GetProperty(document, "one.two.three[0]", ".")
-//    property, err := GetProperty(document, "one/two/three[0]", "/")
+//	property, err := GetProperty(document, "one.two.three[0]")
+//	property, err := GetProperty(document, "one.two.three[0]", ".")
+//	property, err := GetProperty(document, "one/two/three[0]", "/")
 //
 // Property type is `interface{}`
 func GetProperty(original_data map[string]interface{}, path string, separator_arr ...string) (path_parsed interface{}, err error) {
@@ -137,10 +137,9 @@ func GetProperty(original_data map[string]interface{}, path string, separator_ar
 
 // DeleteProperty removes a property from map
 //
-//    err := DeleteProperty(document, "one.two.three[0]")
-//    err := DeleteProperty(document, "one.two.three[0]", ".")
-//    err := DeleteProperty(document, "one/two/three[0]", "/")
-//
+//	err := DeleteProperty(document, "one.two.three[0]")
+//	err := DeleteProperty(document, "one.two.three[0]", ".")
+//	err := DeleteProperty(document, "one/two/three[0]", "/")
 func DeleteProperty(original_data map[string]interface{}, path string, separator_arr ...string) (err error) {
 	var separator = "."
 	if len(separator_arr) > 0 {
@@ -286,13 +285,13 @@ func DeleteProperty(original_data map[string]interface{}, path string, separator
 	return
 }
 
-// AddProperty adds a property to map. Returns an error if property already exists
+// CreateProperty creates a property in map. Returns an error if property already exists.
+// This function follows CRUD naming conventions (Create, Read, Update, Delete).
 //
-//    err := AddProperty(document, "one.two.three[0]", "string value")
-//    err := AddProperty(document, "one.two.three[0]", "string value", ".")
-//    err := AddProperty(document, "one/two/three[0]", "string value", "/")
-//
-func AddProperty(original_data map[string]interface{}, path string, value interface{}, separator_arr ...string) (err error) {
+//	err := CreateProperty(document, "one.two.three[0]", "string value")
+//	err := CreateProperty(document, "one.two.three[0]", "string value", ".")
+//	err := CreateProperty(document, "one/two/three[0]", "string value", "/")
+func CreateProperty(original_data map[string]interface{}, path string, value interface{}, separator_arr ...string) (err error) {
 	var separator = "."
 	if len(separator_arr) > 0 {
 		if len(separator_arr[0]) > 0 {
@@ -357,7 +356,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 							if len(levels[1:]) >= 1 {
 								if isKind(dest_value, reflect.Map) {
 									mapped_value := dest_value.(map[string]interface{})
-									return AddProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
+									return CreateProperty(mapped_value, strings.Join(levels[1:], separator), value, separator)
 								} else if dest_value == nil {
 									slice_len := slice.Len()
 									if index > slice_len-1 {
@@ -375,7 +374,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 
 									mapped_value := make(map[string]interface{})
 
-									err = AddProperty(
+									err = CreateProperty(
 										mapped_value,
 										strings.Join(levels[1:], separator),
 										value,
@@ -436,7 +435,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 					switch reflect.TypeOf(level_one_value).Kind() {
 					case reflect.Map:
 						if mapped_level_one_value, ok := level_one_value.(map[string]interface{}); ok {
-							return AddProperty(mapped_level_one_value, strings.Join(levels[1:], separator), value, separator)
+							return CreateProperty(mapped_level_one_value, strings.Join(levels[1:], separator), value, separator)
 						}
 					default:
 						original_data[path] = value
@@ -446,7 +445,7 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 			} else {
 				new_mapped_value := make(map[string]interface{})
 				original_data[path_level_one] = new_mapped_value
-				return AddProperty(new_mapped_value, strings.Join(levels[1:], separator), value, separator)
+				return CreateProperty(new_mapped_value, strings.Join(levels[1:], separator), value, separator)
 			}
 		} else {
 			// If a map does not contain a last node property
@@ -460,12 +459,18 @@ func AddProperty(original_data map[string]interface{}, path string, value interf
 	return
 }
 
+// AddProperty is an alias for CreateProperty maintained for backward compatibility.
+// Deprecated: Use CreateProperty instead for CRUD-consistent naming
+// (Create, Read, Update, Delete).
+func AddProperty(original_data map[string]interface{}, path string, value interface{}, separator_arr ...string) error {
+	return CreateProperty(original_data, path, value, separator_arr...)
+}
+
 // UpdateProperty updates a property in a map. It will create or update existing property
 //
-//    err := UpdateProperty(document, "one.two.three[0]", "string value")
-//    err := UpdateProperty(document, "one.two.three[0]", "string value", ".")
-//    err := UpdateProperty(document, "one/two/three[0]", "string value", "/")
-//
+//	err := UpdateProperty(document, "one.two.three[0]", "string value")
+//	err := UpdateProperty(document, "one.two.three[0]", "string value", ".")
+//	err := UpdateProperty(document, "one/two/three[0]", "string value", "/")
 func UpdateProperty(original_data map[string]interface{}, path string, value interface{}, separator_arr ...string) (err error) {
 	var separator = "."
 	if len(separator_arr) > 0 {
