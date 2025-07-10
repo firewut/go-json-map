@@ -493,7 +493,7 @@ func TestUpdatePropertyArrayOfObjectsObjects(t *testing.T) {
 	}
 }
 
-func TestAddProperty(t *testing.T) {
+func TestCreateProperty(t *testing.T) {
 	cases := []MapTest{
 		{
 			in:        setupDocument(),
@@ -800,7 +800,7 @@ func TestAddProperty(t *testing.T) {
 	for i, c := range cases {
 		case_index := i + 1
 
-		err_case := AddProperty(c.in, c.path, c.value, c.separator)
+		err_case := CreateProperty(c.in, c.path, c.value, c.separator)
 		out := c.in
 		if !reflect.DeepEqual(c.err, err_case) {
 			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
@@ -1307,4 +1307,533 @@ func setup() (document, document_I, document_II map[string]interface{}) {
 	document_I = setupDocument_I()
 	document_II = setupDocument_II()
 	return
+}
+
+func TestGetPropertyEdgeCases(t *testing.T) {
+	cases := []MapTest{
+		// Invalid array indices
+		{
+			in:        setupDocument(),
+			path:      "one.two.three[-1]",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("Property three[-1] does not exist"),
+		},
+		{
+			in:        setupDocument(),
+			path:      "one.two.three[abc]",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("Property three[abc] does not exist"),
+		},
+		{
+			in:        setupDocument(),
+			path:      "one.two.three[]",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("Property three[] does not exist"),
+		},
+		// Malformed paths
+		{
+			in:        setupDocument(),
+			path:      "one..two",
+			separator: ".",
+			out: map[string]interface{}{
+				"three": []int{1, 2, 3},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "...one...two...",
+			separator: ".",
+			out: map[string]interface{}{
+				"three": []int{1, 2, 3},
+			},
+			err: nil,
+		},
+		{
+			in:        setupDocument(),
+			path:      "",
+			separator: ".",
+			out:       setupDocument(),
+			err:       nil,
+		},
+		// Type conflicts
+		{
+			in:        setupDocument(),
+			path:      "one[0]",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("one: is not an array"),
+		},
+		{
+			in:        setupDocument(),
+			path:      "one.two.three.four",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("Property three.four does not exist"),
+		},
+		// Out of bounds
+		{
+			in:        setupDocument(),
+			path:      "one.two.three[10]",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("three: Min index is 0, Max index is 3. You passed index 10"),
+		},
+		// Nil values in path
+		{
+			in: map[string]interface{}{
+				"a": map[string]interface{}{
+					"b": nil,
+				},
+			},
+			path:      "a.b.c",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("Property b.c does not exist"),
+		},
+	}
+
+	num_cases := len(cases)
+	for i, c := range cases {
+		case_index := i + 1
+
+		out, err_case := GetProperty(c.in, c.path, c.separator)
+		if !reflect.DeepEqual(c.err, err_case) {
+			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
+		}
+		if !reflect.DeepEqual(out, c.out) {
+			t.Errorf("\n[%d of %d: Results should equal] \n\t%v \n \n\t%v", case_index, num_cases, out, c.out)
+		}
+	}
+}
+
+func TestUpdatePropertyEdgeCases(t *testing.T) {
+	cases := []MapTest{
+		// Invalid array index in update - negative indices create properties
+		{
+			in:        setupDocument(),
+			path:      "one.two.three[-5]",
+			value:     "test",
+			separator: ".",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three":     []int{1, 2, 3},
+						"three[-5]": "test",
+					},
+					"four": map[string]interface{}{
+						"five": []int{11, 22, 33},
+					},
+				},
+			},
+			err: nil,
+		},
+		// Type conflict - creates new nested property
+		{
+			in:        setupDocument(),
+			path:      "one.four.five.six[0]",
+			value:     "test",
+			separator: ".",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": map[string]interface{}{
+						"three": []int{1, 2, 3},
+					},
+					"four": map[string]interface{}{
+						"five":        []int{11, 22, 33},
+						"five.six[0]": "test",
+					},
+				},
+			},
+			err: nil,
+		},
+		// Empty path components
+		{
+			in:        setupDocument(),
+			path:      "one....two",
+			value:     "test",
+			separator: ".",
+			out: map[string]interface{}{
+				"one": map[string]interface{}{
+					"two": "test",
+					"four": map[string]interface{}{
+						"five": []int{11, 22, 33},
+					},
+				},
+			},
+			err: nil,
+		},
+	}
+
+	num_cases := len(cases)
+	for i, c := range cases {
+		case_index := i + 1
+
+		err_case := UpdateProperty(c.in, c.path, c.value, c.separator)
+		out := c.in
+		if !reflect.DeepEqual(c.err, err_case) {
+			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
+		}
+		if !reflect.DeepEqual(out, c.out) {
+			t.Errorf("\n[%d of %d: Results should equal] \n\t%v \n \n\t%v", case_index, num_cases, out, c.out)
+		}
+	}
+}
+
+func TestSpecialCharacterProperties(t *testing.T) {
+	// Test properties that the regex pattern can actually handle
+	specialDoc := map[string]interface{}{
+		"prop_with_spaces": map[string]interface{}{
+			"unicode_prop": []interface{}{"value1", "value2"},
+			"special_chars": map[string]interface{}{
+				"nested": "test",
+			},
+		},
+		"number_123": 456,
+		"dash_prop": map[string]interface{}{
+			"under_score": "value",
+		},
+		"prop_dash-": "mixed",
+	}
+
+	cases := []MapTest{
+		// Properties with underscores (spaces not supported)
+		{
+			in:        specialDoc,
+			path:      "prop_with_spaces",
+			separator: ".",
+			out: map[string]interface{}{
+				"unicode_prop": []interface{}{"value1", "value2"},
+				"special_chars": map[string]interface{}{
+					"nested": "test",
+				},
+			},
+			err: nil,
+		},
+		// Array access on properties with underscores
+		{
+			in:        specialDoc,
+			path:      "prop_with_spaces.unicode_prop[0]",
+			separator: ".",
+			out:       "value1",
+			err:       nil,
+		},
+		// Nested property access
+		{
+			in:        specialDoc,
+			path:      "prop_with_spaces.special_chars.nested",
+			separator: ".",
+			out:       "test",
+			err:       nil,
+		},
+		// Numbers in property names (with underscores)
+		{
+			in:        specialDoc,
+			path:      "number_123",
+			separator: ".",
+			out:       456,
+			err:       nil,
+		},
+		// Properties ending with dash
+		{
+			in:        specialDoc,
+			path:      "prop_dash-",
+			separator: ".",
+			out:       "mixed",
+			err:       nil,
+		},
+		// Dashes in paths
+		{
+			in:        specialDoc,
+			path:      "dash_prop.under_score",
+			separator: ".",
+			out:       "value",
+			err:       nil,
+		},
+	}
+
+	num_cases := len(cases)
+	for i, c := range cases {
+		case_index := i + 1
+
+		out, err_case := GetProperty(c.in, c.path, c.separator)
+		if !reflect.DeepEqual(c.err, err_case) {
+			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
+		}
+		if !reflect.DeepEqual(out, c.out) {
+			t.Errorf("\n[%d of %d: Results should equal] \n\t%v \n \n\t%v", case_index, num_cases, out, c.out)
+		}
+	}
+}
+
+func TestDeletePropertyEdgeCases(t *testing.T) {
+	cases := []MapTest{
+		// Delete non-existent property
+		{
+			in:        setupDocument(),
+			path:      "does.not.exist",
+			separator: ".",
+			out:       setupDocument(),
+			err:       fmt.Errorf("Property does does not exist"),
+		},
+		// Delete with invalid array index
+		{
+			in:        setupDocument(),
+			path:      "one.two.three[999]",
+			separator: ".",
+			out:       setupDocument(),
+			err:       fmt.Errorf("three: Min index is 0, Max index is 3. You passed index 999"),
+		},
+		// Delete from non-array with array notation
+		{
+			in:        setupDocument(),
+			path:      "one[0]",
+			separator: ".",
+			out:       setupDocument(),
+			err:       fmt.Errorf("one: is not an array"),
+		},
+		// Empty map after deletion
+		{
+			in: map[string]interface{}{
+				"only": map[string]interface{}{
+					"prop": "value",
+				},
+			},
+			path:      "only.prop",
+			separator: ".",
+			out: map[string]interface{}{
+				"only": map[string]interface{}{},
+			},
+			err: nil,
+		},
+	}
+
+	num_cases := len(cases)
+	for i, c := range cases {
+		case_index := i + 1
+
+		err_case := DeleteProperty(c.in, c.path, c.separator)
+		out := c.in
+		if !reflect.DeepEqual(c.err, err_case) {
+			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
+		}
+		if !reflect.DeepEqual(out, c.out) {
+			t.Errorf("\n[%d of %d: Results should equal] \n\t%v \n \n\t%v", case_index, num_cases, out, c.out)
+		}
+	}
+}
+
+func TestMixedTypeArrays(t *testing.T) {
+	mixedDoc := map[string]interface{}{
+		"mixed": []interface{}{
+			"string",
+			123,
+			map[string]interface{}{"key": "value"},
+			[]int{1, 2, 3},
+			nil,
+		},
+	}
+
+	cases := []MapTest{
+		{
+			in:        mixedDoc,
+			path:      "mixed[0]",
+			separator: ".",
+			out:       "string",
+			err:       nil,
+		},
+		{
+			in:        mixedDoc,
+			path:      "mixed[1]",
+			separator: ".",
+			out:       123,
+			err:       nil,
+		},
+		{
+			in:        mixedDoc,
+			path:      "mixed[2].key",
+			separator: ".",
+			out:       "value",
+			err:       nil,
+		},
+		{
+			in:        mixedDoc,
+			path:      "mixed[3]",
+			separator: ".",
+			out:       []int{1, 2, 3},
+			err:       nil,
+		},
+		{
+			in:        mixedDoc,
+			path:      "mixed[4]",
+			separator: ".",
+			out:       nil,
+			err:       nil,
+		},
+		// Try to access property on non-map element
+		{
+			in:        mixedDoc,
+			path:      "mixed[0].prop",
+			separator: ".",
+			out:       nil,
+			err:       fmt.Errorf("Property mixed[0].prop does not exist"),
+		},
+	}
+
+	num_cases := len(cases)
+	for i, c := range cases {
+		case_index := i + 1
+
+		out, err_case := GetProperty(c.in, c.path, c.separator)
+		if !reflect.DeepEqual(c.err, err_case) {
+			t.Errorf("\n[%d of %d: Errors should equal] \n\t%v \n \n\t%v", case_index, num_cases, err_case, c.err)
+		}
+		if !reflect.DeepEqual(out, c.out) {
+			t.Errorf("\n[%d of %d: Results should equal] \n\t%v \n \n\t%v", case_index, num_cases, out, c.out)
+		}
+	}
+}
+
+func TestAddPropertyAlias(t *testing.T) {
+	// Test that AddProperty works as an alias to CreateProperty
+	doc := map[string]interface{}{
+		"existing": "value",
+	}
+	
+	// Test successful creation
+	err := AddProperty(doc, "new.property", "test value")
+	if err != nil {
+		t.Errorf("AddProperty alias should work: %v", err)
+	}
+	
+	// Verify the property was created
+	val, err := GetProperty(doc, "new.property")
+	if err != nil {
+		t.Errorf("Property should exist: %v", err)
+	}
+	if val != "test value" {
+		t.Errorf("Property value should be 'test value', got: %v", val)
+	}
+	
+	// Test that it fails on existing property (same behavior as CreateProperty)
+	err = AddProperty(doc, "existing", "another value")
+	if err == nil {
+		t.Error("AddProperty should fail on existing property")
+	}
+}
+
+func TestEmptySeparatorBehavior(t *testing.T) {
+	// Test that empty separator defaults to "." separator
+	doc := map[string]interface{}{
+		"one": map[string]interface{}{
+			"two": map[string]interface{}{
+				"three": "nested value",
+			},
+		},
+		"single": "top level value",
+	}
+	
+	// Test that empty separator still uses "." as default
+	val, err := GetProperty(doc, "one.two.three", "")
+	if err != nil {
+		t.Errorf("Empty separator should default to '.': %v", err)
+	}
+	if val != "nested value" {
+		t.Errorf("Expected 'nested value', got: %v", val)
+	}
+	
+	// Verify it's the same as explicit "."
+	val2, err2 := GetProperty(doc, "one.two.three", ".")
+	if err2 != nil {
+		t.Errorf("Explicit '.' separator should work: %v", err2)
+	}
+	if val != val2 {
+		t.Errorf("Empty separator and '.' separator should give same result")
+	}
+	
+	// Test with CreateProperty
+	err = CreateProperty(doc, "new.nested.property", "test value", "")
+	if err != nil {
+		t.Errorf("Should be able to create nested property with empty separator: %v", err)
+	}
+	
+	// Verify it created nested structure
+	val, err = GetProperty(doc, "new", "")
+	if err != nil {
+		t.Errorf("Should have created 'new' property: %v", err)
+	}
+	if _, ok := val.(map[string]interface{}); !ok {
+		t.Error("'new' should be a map")
+	}
+}
+
+func TestAlternativeSeparators(t *testing.T) {
+	// Test using different separators to work with properties containing dots
+	doc := map[string]interface{}{
+		"config": map[string]interface{}{
+			"database.host": "localhost",
+			"database.port": 5432,
+			"api": map[string]interface{}{
+				"v1.endpoint": "https://api.example.com/v1",
+				"v2.endpoint": "https://api.example.com/v2",
+			},
+		},
+	}
+	
+	// Using "/" separator to access properties with dots
+	val, err := GetProperty(doc, "config/database.host", "/")
+	if err != nil {
+		t.Errorf("Should be able to access property with dots using / separator: %v", err)
+	}
+	if val != "localhost" {
+		t.Errorf("Expected 'localhost', got: %v", val)
+	}
+	
+	// Create a new property with dots in the name
+	err = CreateProperty(doc, "config/redis.url", "redis://localhost:6379", "/")
+	if err != nil {
+		t.Errorf("Should be able to create property with dots: %v", err)
+	}
+	
+	// Verify it was created
+	val, err = GetProperty(doc, "config/redis.url", "/")
+	if err != nil {
+		t.Errorf("Property should exist: %v", err)
+	}
+	if val != "redis://localhost:6379" {
+		t.Errorf("Expected 'redis://localhost:6379', got: %v", val)
+	}
+	
+	// Test nested access with alternative separator
+	val, err = GetProperty(doc, "config/api/v1.endpoint", "/")
+	if err != nil {
+		t.Errorf("Should be able to access nested property: %v", err)
+	}
+	if val != "https://api.example.com/v1" {
+		t.Errorf("Expected API v1 endpoint, got: %v", val)
+	}
+	
+	// Test with custom separator like "::"
+	doc2 := map[string]interface{}{
+		"users": map[string]interface{}{
+			"profiles": map[string]interface{}{
+				"john.doe@example.com": map[string]interface{}{
+					"name": "John Doe",
+					"role": "admin",
+				},
+			},
+		},
+	}
+	
+	// Access email-based key using :: separator
+	val, err = GetProperty(doc2, "users::profiles::john.doe@example.com::name", "::")
+	if err != nil {
+		t.Errorf("Should be able to use :: separator: %v", err)
+	}
+	if val != "John Doe" {
+		t.Errorf("Expected 'John Doe', got: %v", val)
+	}
 }
